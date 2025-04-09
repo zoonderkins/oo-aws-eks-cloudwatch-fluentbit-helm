@@ -3,7 +3,7 @@ entries:
   oo-aws-eks-cloudwatch-fluentbit:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2025-04-09T18:06:11.406708+08:00"
+    created: "2025-04-09T18:06:40.665359+08:00"
     description: A Helm chart for AWS Fluent Bit log collector
     digest: 21d804221f611ce68bf5d7e4cbd363bdd2845cc89763361c9019e562fc6962f4
     home: https://github.com/zoonderkins/oo-aws-eks-cloudwatch-fluentbit-helm
@@ -15,6 +15,6 @@ entries:
     name: oo-aws-eks-cloudwatch-fluentbit
     type: application
     urls:
-    - oo-aws-eks-cloudwatch-fluentbit-0.1.1.tgz
+    - charts/oo-aws-eks-cloudwatch-fluentbit-0.1.1.tgz
     version: 0.1.1
-generated: "2025-04-09T18:06:11.40489+08:00"
+generated: "2025-04-09T18:06:40.664398+08:00"
