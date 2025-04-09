@@ -4,12 +4,12 @@
 # AWS region and cluster name for CloudWatch logs
 aws:
   region: ap-northeast-1
-  clusterName: "edward-oo-demo-eks-cluster"
+  clusterName: "demo-eks-cluster"
 
 # Namespace to deploy Fluent Bit resources
 namespace:
   name: amazon-cloudwatch
-  create: true
+  create: false
   labels:
     name: amazon-cloudwatch
 
@@ -28,16 +28,16 @@ fluentBit:
 
   resources:
     limits:
-      cpu: 1500m
+      cpu: 1000m
       memory: 512Mi
     requests:
-      cpu: 1000m
+      cpu: 500m
       memory: 256Mi
       
   # Service account configuration
   serviceAccount:
     # If true, create a new service account
-    create: false
+    create: true
     # If not creating one, the name of the service account to use
     name: cloudwatch-agent
     
@@ -72,10 +72,10 @@ paths:
 # EKS addon for cloudwatch-observability
 cloudwatchObservabilityAddOn:
   # Enable or disable the EKS add-on for amazon-cloudwatch-observability
-  enabled: false
+  enabled: true
   # Role ARN for the service account used by the CloudWatch agent
   # Required if enabled is true
-  serviceAccountRoleArn: ""
+  serviceAccountRoleArn: "arn:aws:iam::1234567890:role/cloudwatch-observability-demo-eks-cluster"
   # If creating a new IAM role via eksctl or other tools
   createRole: false
   # Only relevant if createRole is true - sets policy attachments

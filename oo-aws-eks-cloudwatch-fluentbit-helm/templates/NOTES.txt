@@ -7,7 +7,7 @@ Log Groups:
 - /aws/containerinsights/{{ .Values.aws.clusterName }}/dataplane
 - /aws/containerinsights/{{ .Values.aws.clusterName }}/host
 
-{{- if .Values.cloudwatchObservability.enabled }}
+{{- if .Values.cloudwatchObservabilityAddOn.enabled }}
 
 ===============================================
 IMPORTANT: EKS CloudWatch Observability Add-on
@@ -22,13 +22,13 @@ To complete the installation, run the following command:
 aws eks update-addon \
   --cluster-name {{ .Values.aws.clusterName }} \
   --addon-name amazon-cloudwatch-observability \
-  --resolve-conflicts {{ .Values.cloudwatchObservability.addOnConfig.conflictResolution }} \
-{{- if .Values.cloudwatchObservability.serviceAccountRoleArn }}
-  --service-account-role-arn {{ .Values.cloudwatchObservability.serviceAccountRoleArn }} \
+  --resolve-conflicts {{ .Values.cloudwatchObservabilityAddOn.addOnConfig.conflictResolution }} \
+{{- if .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }}
+  --service-account-role-arn {{ .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }} \
 {{- end }}
   --region {{ .Values.aws.region }}
 
-{{- if .Values.cloudwatchObservability.createRole }}
+{{- if .Values.cloudwatchObservabilityAddOn.createRole }}
 
 # To create an IAM role (if you haven't already):
 eksctl create iamserviceaccount \
@@ -36,7 +36,7 @@ eksctl create iamserviceaccount \
   --namespace {{ .Values.namespace.name }} \
   --cluster {{ .Values.aws.clusterName }} \
   --region {{ .Values.aws.region }} \
-  --attach-policy-arn {{ index .Values.cloudwatchObservability.rolePolicyArns 0 }} \
+  --attach-policy-arn {{ index .Values.cloudwatchObservabilityAddOn.rolePolicyArns 0 }} \
   --approve \
   --override-existing-serviceaccounts
 {{- end }}
