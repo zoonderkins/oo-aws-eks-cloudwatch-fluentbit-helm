@@ -1,0 +1,38 @@
+{{- if and .Values.cloudwatchObservabilityAddOn.enabled .Values.cloudwatchObservabilityAddOn.createRole }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudwatch-terraform-examples
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+data:
+  terraform-example.tf: |
+    # Example Terraform code to create IAM role for CloudWatch Observability
+
+    # OIDC Provider for the EKS cluster
+    data "aws_eks_cluster" "eks" {
+      name = "{{ .Values.aws.clusterName }}"
+    }
+
+    module "cloudwatch_observability_irsa_role" {
+      source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+      version = "~> 5.0"
+
+      create_role                   = true
+      role_name                     = "cloudwatch-observability-{{ .Values.aws.clusterName }}"
+      provider_url                  = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
+      role_policy_arns              = {{ toJson .Values.cloudwatchObservabilityAddOn.rolePolicyArns }}
+      oidc_fully_qualified_subjects = ["system:serviceaccount:{{ .Values.namespace.name }}:{{ .Values.fluentBit.serviceAccount.name }}"]
+    }
+
+    output "cloudwatch_observability_role_arn" {
+      value = module.cloudwatch_observability_irsa_role.iam_role_arn
+    }
+
+    # After applying this configuration, update the Helm values with the role ARN:
+    # helm upgrade fluent-bit ./fluent-bit \
+    #   --set cloudwatchObservabilityAddOn.serviceAccountRoleArn=$(terraform output -raw cloudwatch_observability_role_arn)
+{{- end }} 

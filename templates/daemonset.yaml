@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Values.fluentBit.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- toYaml .Values.fluentBit.labels | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      k8s-app: {{ .Values.fluentBit.name }}
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.fluentBit.labels | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: {{ .Values.fluentBit.name }}
+        image: "{{ .Values.fluentBit.image.repository }}:{{ .Values.fluentBit.image.tag }}"
+        imagePullPolicy: {{ .Values.fluentBit.image.pullPolicy }}
+        env:
+          - name: AWS_REGION
+            value: "{{ .Values.aws.region }}"
+          - name: CLUSTER_NAME
+            value: "{{ .Values.aws.clusterName }}"
+          - name: READ_FROM_HEAD
+            value: "{{ .Values.fluentBit.env.readFromHead }}"
+          - name: READ_FROM_TAIL
+            value: "{{ .Values.fluentBit.env.readFromTail }}"
+          - name: HOST_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: CI_VERSION
+            value: "{{ .Values.fluentBit.env.ciVersion }}"
+        resources:
+          {{- toYaml .Values.fluentBit.resources | nindent 10 }}
+        volumeMounts:
+          - name: fluentbitstate
+            mountPath: {{ .Values.paths.fluentBitState }}
+          - name: varlog
+            mountPath: {{ .Values.paths.varLog }}
+            readOnly: true
+          - name: varlibdockercontainers
+            mountPath: {{ .Values.paths.dockerContainers }}
+            readOnly: true
+          - name: fluent-bit-config
+            mountPath: /fluent-bit/etc/
+          - name: runlogjournal
+            mountPath: {{ .Values.paths.runLogJournal }}
+            readOnly: true
+          - name: dmesg
+            mountPath: {{ .Values.paths.dmesg }}
+            readOnly: true
+      terminationGracePeriodSeconds: {{ .Values.fluentBit.pod.terminationGracePeriodSeconds }}
+      hostNetwork: {{ .Values.fluentBit.pod.hostNetwork }}
+      dnsPolicy: {{ .Values.fluentBit.pod.dnsPolicy }}
+      volumes:
+        - name: fluentbitstate
+          hostPath:
+            path: {{ .Values.paths.fluentBitState }}
+        - name: varlog
+          hostPath:
+            path: {{ .Values.paths.varLog }}
+        - name: varlibdockercontainers
+          hostPath:
+            path: {{ .Values.paths.dockerContainers }}
+        - name: fluent-bit-config
+          configMap:
+            name: {{ .Values.fluentBit.name }}-config
+        - name: runlogjournal
+          hostPath:
+            path: {{ .Values.paths.runLogJournal }}
+        - name: dmesg
+          hostPath:
+            path: {{ .Values.paths.dmesg }}
+      serviceAccountName: {{ .Values.fluentBit.serviceAccount.name }}
+      nodeSelector:
+        {{- toYaml .Values.fluentBit.nodeSelector | nindent 8 }}
+      {{- with .Values.fluentBit.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

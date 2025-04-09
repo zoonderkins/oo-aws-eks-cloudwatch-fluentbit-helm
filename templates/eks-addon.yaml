@@ -1,0 +1,53 @@
+{{- if .Values.cloudwatchObservabilityAddOn.enabled }}
+# Note: This template provides the YAML that should be applied with kubectl or eksctl
+# It is included here for documentation purposes but it does not actually apply 
+# the add-on as Helm cannot directly manage EKS add-ons
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eks-addon-cloudwatch-observability
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+data:
+  instructions: |
+    # The amazon-cloudwatch-observability add-on must be installed using the AWS CLI or eksctl.
+    # Below are examples of how to install the add-on:
+
+    # Using AWS CLI:
+    aws eks update-addon \
+      --cluster-name {{ .Values.aws.clusterName }} \
+      --addon-name amazon-cloudwatch-observability \
+      --resolve-conflicts {{ .Values.cloudwatchObservabilityAddOn.addOnConfig.conflictResolution }} \
+      {{- if .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }}
+      --service-account-role-arn {{ .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }} \
+      {{- end }}
+      --region {{ .Values.aws.region }}
+
+    # Using eksctl:
+    eksctl create addon \
+      --name amazon-cloudwatch-observability \
+      --cluster {{ .Values.aws.clusterName }} \
+      --region {{ .Values.aws.region }} \
+      {{- if .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }}
+      --service-account-role-arn {{ .Values.cloudwatchObservabilityAddOn.serviceAccountRoleArn }} \
+      {{- end }}
+      --force
+
+  {{- if .Values.cloudwatchObservabilityAddOn.createRole }}
+  role_instructions: |
+    # To create an IAM role for the CloudWatch Observability add-on:
+
+    # Using eksctl:
+    eksctl create iamserviceaccount \
+      --name cloudwatch-agent \
+      --namespace {{ .Values.namespace.name }} \
+      --cluster {{ .Values.aws.clusterName }} \
+      --region {{ .Values.aws.region }} \
+      --attach-policy-arn {{ join "," .Values.cloudwatchObservabilityAddOn.rolePolicyArns }} \
+      --approve \
+      --override-existing-serviceaccounts
+  {{- end }}
+{{- end }} 

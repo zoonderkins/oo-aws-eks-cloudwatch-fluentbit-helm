@@ -1,0 +1,52 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your Fluent Bit installation is now collecting logs and shipping them to Amazon CloudWatch.
+
+Log Groups:
+- /aws/containerinsights/{{ .Values.aws.clusterName }}/application
+- /aws/containerinsights/{{ .Values.aws.clusterName }}/dataplane
+- /aws/containerinsights/{{ .Values.aws.clusterName }}/host
+
+{{- if .Values.cloudwatchObservability.enabled }}
+
+===============================================
+IMPORTANT: EKS CloudWatch Observability Add-on
+===============================================
+
+You have enabled the amazon-cloudwatch-observability EKS add-on option.
+Please note that Helm cannot directly manage EKS add-ons.
+
+To complete the installation, run the following command:
+
+# Using AWS CLI:
+aws eks update-addon \
+  --cluster-name {{ .Values.aws.clusterName }} \
+  --addon-name amazon-cloudwatch-observability \
+  --resolve-conflicts {{ .Values.cloudwatchObservability.addOnConfig.conflictResolution }} \
+{{- if .Values.cloudwatchObservability.serviceAccountRoleArn }}
+  --service-account-role-arn {{ .Values.cloudwatchObservability.serviceAccountRoleArn }} \
+{{- end }}
+  --region {{ .Values.aws.region }}
+
+{{- if .Values.cloudwatchObservability.createRole }}
+
+# To create an IAM role (if you haven't already):
+eksctl create iamserviceaccount \
+  --name cloudwatch-agent \
+  --namespace {{ .Values.namespace.name }} \
+  --cluster {{ .Values.aws.clusterName }} \
+  --region {{ .Values.aws.region }} \
+  --attach-policy-arn {{ index .Values.cloudwatchObservability.rolePolicyArns 0 }} \
+  --approve \
+  --override-existing-serviceaccounts
+{{- end }}
+
+After installing the add-on, check its status:
+aws eks describe-addon \
+  --cluster-name {{ .Values.aws.clusterName }} \
+  --addon-name amazon-cloudwatch-observability \
+  --region {{ .Values.aws.region }}
+{{- end }}
+
+To view the logs in CloudWatch, visit:
+https://{{ .Values.aws.region }}.console.aws.amazon.com/cloudwatch/home?region={{ .Values.aws.region }}#logsV2:log-groups 

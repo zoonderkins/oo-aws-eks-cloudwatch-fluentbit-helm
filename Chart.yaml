@@ -1,0 +1,17 @@
+apiVersion: v2
+name: fluent-bit
+description: A Helm chart for AWS Fluent Bit log collector
+type: application
+version: 0.1.0
+appVersion: "2.32.5.20250327"
+maintainers:
+  - name: edoo
+    email: git-ed@runbox.no
+home: https://github.com/yourusername/k8s-otel
+keywords:
+  - fluent-bit
+  - logging
+  - aws
+  - cloudwatch
+sources:
+  - https://github.com/aws/aws-for-fluent-bit 
